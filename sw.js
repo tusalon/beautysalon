@@ -1,6 +1,6 @@
 // sw.js - Service Worker para Beauty Salón
 
-const CACHE_NAME = 'beautysalon-v1';
+const CACHE_NAME = 'beautysalon-v49';
 const urlsToCache = [
   '/beautysalon/',
   '/beautysalon/index.html',
@@ -17,7 +17,16 @@ const urlsToCache = [
   '/beautysalon/icons/icon-152x152.png',
   '/beautysalon/icons/icon-192x192.png',
   '/beautysalon/icons/icon-384x384.png',
-  '/beautysalon/icons/icon-512x512.png'
+  '/beautysalon/icons/icon-512x512.png',
+  '/beautysalon/vendor/react.production.min.js',
+  '/beautysalon/vendor/react-dom.production.min.js',
+  '/beautysalon/vendor/babel.min.js',
+  '/beautysalon/vendor/bcrypt.min.js',
+  '/beautysalon/vendor/tailwind-browser.js',
+  '/beautysalon/vendor/lucide/lucide.css',
+  '/beautysalon/vendor/lucide/lucide.woff2',
+  '/beautysalon/utils/push-config.js',
+  '/beautysalon/utils/push-notifications.js'
 ];
 
 // ============================================
@@ -137,6 +146,51 @@ self.addEventListener('message', event => {
       });
     });
   }
+});
+
+// ============================================
+// WEB PUSH OPCIONAL
+// ============================================
+self.addEventListener('push', event => {
+  let payload = {};
+
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (error) {
+    payload = {
+      title: 'RservasRoma',
+      body: event.data ? event.data.text() : 'Tienes una nueva notificación'
+    };
+  }
+
+  const title = payload.title || 'RservasRoma';
+  const options = {
+    body: payload.body || 'Tienes una nueva notificación',
+    icon: '/beautysalon/icons/icon-192x192.png',
+    badge: '/beautysalon/icons/icon-96x96.png',
+    tag: payload.tag || 'rservasroma',
+    data: {
+      url: payload.url || '/beautysalon/admin.html',
+      ...(payload.data || {})
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  const targetUrl = event.notification?.data?.url || '/beautysalon/admin.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && 'focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+      return null;
+    })
+  );
 });
 
 console.log('✅ Service Worker configurado para Beauty Salón');
