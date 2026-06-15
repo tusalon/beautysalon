@@ -1,6 +1,6 @@
 // sw.js - Service Worker para Beauty Salón
 
-const CACHE_NAME = 'beautysalon-v49';
+const CACHE_NAME = 'beautysalon-v56';
 const urlsToCache = [
   '/beautysalon/',
   '/beautysalon/index.html',
